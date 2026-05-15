@@ -1,0 +1,606 @@
+openapi: 3.2.0
+info:
+  title: ERPClean - Users
+  version: 1.0.0
+  description: >
+    Spécification du domaine Utilisateurs de l'application ERP.
+    Gestion des utilisateurs, de leurs rôles et de l'authentification.
+
+tags:
+  - name: Users
+    description: Gestion des utilisateurs de l'application
+  - name: Auth
+    description: Authentification et gestion des sessions
+
+paths:
+  /users:
+    get:
+      tags: [Users]
+      summary: Lister les utilisateurs
+      description: Récupère la liste paginée des utilisateurs de l'application.
+      parameters:
+        - name: page
+          in: query
+          description: Numéro de page (à partir de 1).
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+        - name: pageSize
+          in: query
+          description: Nombre d'éléments par page.
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Liste des utilisateurs.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+                  total:
+                    type: integer
+                  page:
+                    type: integer
+                  pageSize:
+                    type: integer
+              examples:
+                default:
+                  value:
+                    items:
+                      - id: "a3f7b2c1-9d4e-4f1a-8b2e-1c2d3e4f5a6b"
+                        email: "chef.equipe@valsch.com"
+                        firstName: "Jean"
+                        lastName: "Dupont"
+                        role: "visitor"
+                        isActive: true
+                        createdAt: "2026-02-20T10:15:30Z"
+                        updatedAt: "2026-02-21T09:00:00Z"
+                      - id: "b4e8c3d2-1a5f-4b6c-9d7e-2f3a4b5c6d7e"
+                        email: "admin@valsch.com"
+                        firstName: "Admin"
+                        lastName: "Plateforme"
+                        role: "admin"
+                        isActive: true
+                        createdAt: "2026-02-18T08:00:00Z"
+                        updatedAt: "2026-02-19T11:30:00Z"
+                    total: 2
+                    page: 1
+                    pageSize: 20
+        '401':
+          description: Non authentifié.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erreur interne du serveur.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags: [Users]
+      summary: Créer un utilisateur
+      description: Crée un nouvel utilisateur de la plateforme.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserInput'
+            examples:
+              default:
+                value:
+                  email: "nouvel.utilisateur@valsch.com"
+                  password: "MotDePasseSecurise123!"
+                  firstName: "Marie"
+                  lastName: "Durand"
+                  role: "premium"
+                  isActive: true
+      responses:
+        '201':
+          description: Utilisateur créé avec succès.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Données invalides.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Non authentifié.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflit - un utilisateur avec cet email existe déjà.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erreur interne du serveur.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /users/{id}:
+    get:
+      tags: [Users]
+      summary: Récupérer un utilisateur
+      description: Récupère les informations détaillées d'un utilisateur par son identifiant.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Identifiant unique de l'utilisateur.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Utilisateur trouvé.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Non authentifié.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Utilisateur non trouvé.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erreur interne du serveur.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags: [Users]
+      summary: Remplacer un utilisateur
+      description: Remplace l'ensemble des informations d'un utilisateur existant.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Identifiant unique de l'utilisateur.
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+            examples:
+              default:
+                value:
+                  email: "utilisateur.mis.a.jour@valsch.com"
+                  firstName: "Jean"
+                  lastName: "Martin"
+                  role: "CHEF_EQUIPE"
+                  isActive: true
+      responses:
+        '200':
+          description: Utilisateur mis à jour avec succès.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Données invalides.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Non authentifié.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Utilisateur non trouvé.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erreur interne du serveur.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    patch:
+      tags: [Users]
+      summary: Mettre à jour partiellement un utilisateur
+      description: Met à jour partiellement les informations d'un utilisateur existant.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Identifiant unique de l'utilisateur.
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserPartialUpdate'
+            examples:
+              default:
+                value:
+                  firstName: "Jean"
+                  isActive: false
+      responses:
+        '200':
+          description: Utilisateur mis à jour avec succès.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Données invalides.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Non authentifié.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Utilisateur non trouvé.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erreur interne du serveur.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags: [Users]
+      summary: Supprimer un utilisateur
+      description: Supprime un utilisateur existant de la plateforme.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Identifiant unique de l'utilisateur.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Utilisateur supprimé avec succès. Aucun contenu retourné.
+        '401':
+          description: Non authentifié.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Utilisateur non trouvé.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erreur interne du serveur.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Authentifier un utilisateur
+      description: Authentifie un utilisateur et retourne un jeton JWT.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            examples:
+              default:
+                value:
+                  email: "chef.equipe@valsch.com"
+                  password: "MotDePasseSecurise123!"
+      responses:
+        '200':
+          description: Authentification réussie.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Données invalides.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Identifiants invalides.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erreur interne du serveur.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Rafraîchir le jeton d'accès
+      description: Rafraîchit le jeton d'accès à partir d'un jeton de rafraîchissement valide.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+            examples:
+              default:
+                value:
+                  refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      responses:
+        '200':
+          description: Jeton rafraîchi avec succès.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Données invalides.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Jeton de rafraîchissement invalide ou expiré.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erreur interne du serveur.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Déconnecter l'utilisateur
+      description: Invalide le jeton de rafraîchissement et termine la session.
+      responses:
+        '204':
+          description: Déconnexion effectuée avec succès.
+        '401':
+          description: Non authentifié.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erreur interne du serveur.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    User:
+      type: object
+      description: Représente un utilisateur de l'application ERPClean.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Identifiant unique de l'utilisateur.
+        email:
+          type: string
+          format: email
+          description: Adresse email de l'utilisateur.
+        firstName:
+          type: string
+          description: Prénom de l'utilisateur.
+        lastName:
+          type: string
+          description: Nom de famille de l'utilisateur.
+        role:
+          $ref: '#/components/schemas/Role'
+        isActive:
+          type: boolean
+          description: Indique si le compte est actif.
+          default: true
+        createdAt:
+          type: string
+          format: date-time
+          description: Date de création de l'utilisateur.
+        updatedAt:
+          type: string
+          format: date-time
+          description: Date de dernière mise à jour de l'utilisateur.
+      required:
+        - id
+        - email
+        - role
+        - isActive
+        - createdAt
+        - updatedAt
+
+    UserInput:
+      type: object
+      description: Données nécessaires à la création d'un utilisateur.
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+          minLength: 8
+        firstName:
+          type: string
+        lastName:
+          type: string
+        role:
+          $ref: '#/components/schemas/Role'
+        isActive:
+          type: boolean
+          default: true
+      required:
+        - email
+        - password
+        - role
+
+    UserUpdate:
+      type: object
+      description: Données pour la mise à jour complète d'un utilisateur.
+      properties:
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        role:
+          $ref: '#/components/schemas/Role'
+        isActive:
+          type: boolean
+      required:
+        - email
+        - role
+        - isActive
+
+    UserPartialUpdate:
+      type: object
+      description: Données pour la mise à jour partielle d'un utilisateur.
+      properties:
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        role:
+          $ref: '#/components/schemas/Role'
+        isActive:
+          type: boolean
+
+    Role:
+      type: string
+      description: Rôle fonctionnel de l'utilisateur dans l'application.
+      enum:
+        - admin
+        - premium
+        - visitor
+
+    LoginRequest:
+      type: object
+      description: Données d'authentification de l'utilisateur.
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+      required:
+        - email
+        - password
+
+    RefreshRequest:
+      type: object
+      description: Données nécessaires pour rafraîchir un jeton d'accès.
+      properties:
+        refreshToken:
+          type: string
+      required:
+        - refreshToken
+
+    AuthResponse:
+      type: object
+      description: Réponse d'authentification contenant les jetons.
+      properties:
+        accessToken:
+          type: string
+          description: Jeton d'accès JWT.
+        refreshToken:
+          type: string
+          description: Jeton de rafraîchissement.
+        tokenType:
+          type: string
+          description: Type de jeton.
+          example: "Bearer"
+        expiresIn:
+          type: integer
+          description: Durée de validité du jeton d'accès en secondes.
+      required:
+        - accessToken
+        - refreshToken
+        - tokenType
+        - expiresIn
+
+    ErrorResponse:
+      type: object
+      description: Structure standard de réponse en cas d'erreur.
+      properties:
+        code:
+          type: string
+          description: Code d'erreur technique.
+          example: "USER_NOT_FOUND"
+        message:
+          type: string
+          description: Message d'erreur lisible.
+          example: "Utilisateur non trouvé."
+        details:
+          type: object
+          description: Détails supplémentaires sur l'erreur.
+      required:
+        - code
+        - message
