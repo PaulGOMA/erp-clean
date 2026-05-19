@@ -1,11 +1,10 @@
-### Enoncé du mini projet
+### Enoncé
 
 Ce document est un **énoncé complet et réaliste** pour implémenter un mini‑projet basé sur **Clean Architecture** :  
 - **Users Backend** : Django (auth, users, MySQL, API REST)  
 - **Business Backend** : règles métiers pures (FastAPI ou service Python), consommation de l’API Users et worker asynchrone via Redis/RabbitMQ  
 - **Frontend** : Vue 3 + TypeScript SPA  
 - **Orchestration** : Docker Compose  
-Tu pourras coder seul·e à partir de cet énoncé ; ensuite envoie ton code et je l’analyserai et t’aiderai à l’améliorer.
 
 ---
 
@@ -69,6 +68,7 @@ Construire un mini‑ERP minimal mais réaliste où :
 - **User** : `id:int`, `email:str`, `role:str` (`user`, `premium`, `admin`)  
 - **Order** (domaine métier) : `id:int`, `user_id:int`, `items:list[Item]`, `base_price:float`, `currency:str`  
 - **Invoice** : `id:int`, `order_id:int`, `amount:float`, `status:str` (`pending`, `generated`, `failed`)
+- **Item** : `id:int`, `name:str`, `description:str`, `unit_price:float`, `quantity:int`, `satus:str` (`available`, `unavailable`)
 
 #### Règles métiers principales (avec exceptions)
 Chaque règle est décrite avec **préconditions**, **effet**, **exceptions levées** et **codes d’erreur**.
